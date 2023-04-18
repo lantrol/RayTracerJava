@@ -10,14 +10,14 @@ package raytracerjava;
  */
 public class Camera {
     public Integer width, height;
-    public Integer[] posicion;
+    public Vector3 position;
     public Float ratio;
     public Float[] screen;
 
     public Camera(Integer width, Integer height) {
         this.width = width;
         this.height = height;
-        posicion = new Integer[]{0,0,1};
+        position = new Vector3(0f,0f,1f);
         ratio = (float)width/height;
         screen = new Float[]{-1f, 1/ratio, 1f, -1/ratio};      
     }
