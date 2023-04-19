@@ -8,12 +8,12 @@ package raytracerjava;
  *
  * @author landa
  */
-public class Testing {
-    public static void main(String[] args) {
-        Vector3 v = new Vector3(2f, 0f, 0f);
-        Vector3 v2 = new Vector3(1f, 0f, 1f);
-        v.sub(v2);
-        System.out.println(v2);
-        System.out.println(v);
+public class NIOReturn {
+    public Sphere sphere;
+    public Float min_distance;
+
+    public NIOReturn(Sphere sphere, Float min_distance) {
+        this.sphere = sphere;
+        this.min_distance = min_distance;
     }
 }
