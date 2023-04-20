@@ -10,10 +10,10 @@ package raytracerjava;
  */
 public class Testing {
     public static void main(String[] args) {
-        Vector3 v = new Vector3(2f, 0f, 0f);
-        Vector3 v2 = new Vector3(1f, 0f, 1f);
-        v.sub(v2);
-        System.out.println(v2);
-        System.out.println(v);
+        Vector3 origin = new Vector3(0f, 0f, -1f);
+        Vector3 direction = new Vector3(0f, 0f, 1f);
+        Plane plane = new Plane(new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, -1f));
+        
+        System.out.println(plane.intersection(plane, origin, direction));
     }
 }

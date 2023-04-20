@@ -9,11 +9,11 @@ package raytracerjava;
  * @author landa
  */
 public class NIOReturn {
-    public Sphere sphere;
+    public Geometry geometry;
     public Float min_distance;
 
-    public NIOReturn(Sphere sphere, Float min_distance) {
-        this.sphere = sphere;
+    public NIOReturn(Geometry geometry, Float min_distance) {
+        this.geometry = geometry;
         this.min_distance = min_distance;
     }
 }
