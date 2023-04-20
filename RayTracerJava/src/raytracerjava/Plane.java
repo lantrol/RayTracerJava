@@ -23,7 +23,7 @@ public class Plane extends Geometry{
         
         Float a = Vector3.dotProd(plane.normal, Vector3.sub(ray_origin, plane.position));
         Float b = Vector3.dotProd(plane.normal, ray_direction);
-        Float t = -a/b;
+        Float t = a/-b;
         
         if (t > 0){
             return t;

@@ -127,7 +127,7 @@ public class RayTracerJavaGeometry{
             //print("%d/%d" % (i + 1, height))
             System.out.println(i);
         }
-        File output = new File("/home/landa/Documents/GitHub/RayTracerJava/outputNoShadowed.png");
+        File output = new File("../Renders/outputPlano.png");
         ImageIO.write(image, "png", output);
     }
 }
