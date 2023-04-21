@@ -16,21 +16,22 @@ import javax.imageio.ImageIO;
  *
  * @author landa
  */
-public class RayTracerJava {
+public class RayTracerJava{
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
         Camera camera = new Camera(1920, 1080);
-        List<Sphere> objects = new ArrayList<Sphere>();
+        List<Geometry> objects = new ArrayList<Geometry>();
         objects.add(new Sphere(new Vector3(-0.2f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         objects.add(new Sphere(new Vector3(0.2f, -0.3f, -0.5f), 0.2f, new Vector3(0.1f, 0f, 0.1f), new Vector3(0.3f, 0f, 0.4f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         objects.add(new Sphere(new Vector3(2.5f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         objects.add(new Sphere(new Vector3(-0.2f, -1001f, -1f), 1000f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        objects.add(new Plane(new Vector3(0f, 0f, -1.5f), new Vector3(-1f, 0f, 1f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         Light light = new Light(new Vector3(3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f));
         
-        Integer max_depth = 3;
+        Integer max_depth = 2;
         
         //Float[] p = Camera.linspace(camera.screen[1], camera.screen[3], camera.height);
         BufferedImage image = new BufferedImage(camera.width,camera.height,BufferedImage.TYPE_INT_RGB);
@@ -54,8 +55,8 @@ public class RayTracerJava {
                 Float reflection = 1f;
                 
                 for (int k = 0; k < max_depth; k++) {
-                    NIOReturn nior = Sphere.nearest_intersected_object(objects, origin, direction);
-                    if (nior.sphere == null){ break;}
+                    NIOReturn nior = Geometry.nearest_intersected_object(objects, origin, direction);
+                    if (nior.geometry == null){ break;}
                     
                     //Inter = origin + min_dist*direction
                     Vector3 intersection = new Vector3();
@@ -64,9 +65,17 @@ public class RayTracerJava {
                     intersection.add(origin);
                     
                     Vector3 normal_to_surface = new Vector3();
-                    normal_to_surface.copy(intersection);
-                    normal_to_surface.sub(nior.sphere.center);
-                    normal_to_surface.normalize();
+                    
+                    if (nior.geometry instanceof Plane){
+                        normal_to_surface.copy(((Plane)nior.geometry).normal);
+                        normal_to_surface.normalize();
+                    }
+                    else{
+                        normal_to_surface.copy(intersection);
+                        normal_to_surface.sub(((Sphere)nior.geometry).center);
+                        normal_to_surface.normalize();
+                    }
+                    
                     
                     Vector3 shifted_point = new Vector3();
                     shifted_point.copy(normal_to_surface);
@@ -78,7 +87,7 @@ public class RayTracerJava {
                     intersection_to_light.sub(shifted_point);
                     intersection_to_light.normalize();
                     
-                    NIOReturn nior2 = Sphere.nearest_intersected_object(objects, shifted_point, intersection_to_light);
+                    NIOReturn nior2 = Geometry.nearest_intersected_object(objects, shifted_point, intersection_to_light);
                     Vector3 interToLight = new Vector3();
                     interToLight.copy(light.position);
                     interToLight.sub(intersection);
@@ -93,22 +102,22 @@ public class RayTracerJava {
                     
                     Vector3 illumination = new Vector3();
                     // Ambient
-                    illumination.add(Vector3.multiply(nior.sphere.ambient, light.ambient));
+                    illumination.add(Vector3.multiply(nior.geometry.ambient, light.ambient));
                     // Diffuse
-                    illumination.add(Vector3.scale(Vector3.multiply(nior.sphere.diffuse, light.diffuse), Vector3.dotProd(intersection_to_light, normal_to_surface)));
+                    illumination.add(Vector3.scale(Vector3.multiply(nior.geometry.diffuse, light.diffuse), Vector3.dotProd(intersection_to_light, normal_to_surface)));
                     
                     Vector3 intersection_to_camera = new Vector3();
                     intersection_to_camera.copy(camera.position);
                     intersection_to_camera.sub(intersection);
                     intersection_to_camera.normalize();
                     Vector3 H = Vector3.normalize(Vector3.add(intersection_to_light, intersection_to_camera));
-                    illumination.add(Vector3.multiply(nior.sphere.specular, Vector3.scale(light.specular, (float)Math.pow(Vector3.dotProd(normal_to_surface, H), nior.sphere.shininess/4))));
+                    illumination.add(Vector3.multiply(nior.geometry.specular, Vector3.scale(light.specular, (float)Math.pow(Vector3.dotProd(normal_to_surface, H), nior.geometry.shininess/4))));
                     
                     //Reflection
                     illumination.scale(reflection);
                     Vector3 illuminationClip = Vector3.clip(illumination, 0f, 1f);
                     Color color = new Color((float)illuminationClip.x,(float)illuminationClip.y, (float)illuminationClip.z);
-                    reflection = nior.sphere.reflection;
+                    reflection = nior.geometry.reflection;
                     
                     origin.copy(shifted_point);
                     direction.copy(Vector3.reflected(direction, normal_to_surface));
@@ -118,7 +127,7 @@ public class RayTracerJava {
             //print("%d/%d" % (i + 1, height))
             System.out.println(i);
         }
-        File output = new File("/home/landa/Documents/GitHub/RayTracerJava/outputNoShadowed.png");
+        File output = new File("../Renders/outputPlano.png");
         ImageIO.write(image, "png", output);
     }
 }
