@@ -12,7 +12,7 @@ import java.util.ListIterator;
  *
  * @author landa
  */
-public class Geometry {
+public abstract class Geometry {
     public Vector3 ambient;
     public Vector3 diffuse;
     public Vector3 specular;
@@ -27,16 +27,23 @@ public class Geometry {
         this.reflection = reflection;
     }
     
+    public abstract Float intersect(Vector3 ray_origin, Vector3 ray_direction);
     
     public static NIOReturn nearest_intersected_object(List<Geometry> objects, Vector3 ray_origin, Vector3 ray_direction){
         List<Float> distances = new ArrayList<Float>();
         for (Geometry obj: objects){
+            distances.add(obj.intersect(ray_origin, ray_direction));
+            /*
             if (obj instanceof Sphere){
                 distances.add(Sphere.intersect((Sphere)obj, ray_origin, ray_direction));
             }
             else if (obj instanceof Plane){
                 distances.add(Plane.intersect((Plane)obj, ray_origin, ray_direction));
             }
+            else if (obj instanceof Circle){
+                distances.add(Circle.intersect((()obj, ray_origin, ray_direction));
+            }
+            */
         }
         
         Geometry nearest_obj = null;

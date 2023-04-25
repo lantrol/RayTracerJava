@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import javax.imageio.ImageIO;
 
 /**
@@ -24,18 +25,23 @@ public class RayTracerJava{
     public static void main(String[] args) throws IOException {
         Camera camera = new Camera(1920, 1080);
         List<Geometry> objects = new ArrayList<Geometry>();
-        objects.add(new Sphere(new Vector3(-0.2f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        objects.add(new Sphere(new Vector3(0.2f, -0.3f, -0.5f), 0.2f, new Vector3(0.1f, 0f, 0.1f), new Vector3(0.3f, 0f, 0.4f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        objects.add(new Sphere(new Vector3(2.5f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        objects.add(new Sphere(new Vector3(-0.2f, -1001f, -1f), 1000f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        objects.add(new Plane(new Vector3(0f, 0f, -1.5f), new Vector3(-1f, 0f, 1f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        //objects.add(new Sphere(new Vector3(-0.2f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        //objects.add(new Sphere(new Vector3(0.2f, -0.3f, -0.5f), 0.2f, new Vector3(0.1f, 0f, 0.1f), new Vector3(0.3f, 0f, 0.4f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        //objects.add(new Sphere(new Vector3(2.5f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        //objects.add(new Sphere(new Vector3(-0.2f, -1001f, -1f), 1000f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        objects.add(new Plane(new Vector3(0f, -1f, 0f), new Vector3(0f, 1f, 0f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0.7f, 0.7f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        //objects.add(new Plane(new Vector3(0f, 0f, -20f), new Vector3(0f, 0f, 1f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0.7f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        objects.add(new Circle(new Vector3(0f, 0f, -1.5f), new Vector3(1f, 0f, 1f), 0.5f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         Light light = new Light(new Vector3(3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f));
         
-        Integer max_depth = 2;
+        Integer max_depth = 1;
         
         //Float[] p = Camera.linspace(camera.screen[1], camera.screen[3], camera.height);
         BufferedImage image = new BufferedImage(camera.width,camera.height,BufferedImage.TYPE_INT_RGB);
         
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Intruce el nombre del archivo: ");
+        String nomArchivo = sc.nextLine();
         
         Float[] pVer = Camera.linspace(camera.screen[1],camera.screen[3],camera.height);
         Float[] pHor = Camera.linspace(camera.screen[0],camera.screen[2],camera.width);
@@ -70,9 +76,13 @@ public class RayTracerJava{
                         normal_to_surface.copy(((Plane)nior.geometry).normal);
                         normal_to_surface.normalize();
                     }
-                    else{
+                    else if(nior.geometry instanceof Sphere){
                         normal_to_surface.copy(intersection);
                         normal_to_surface.sub(((Sphere)nior.geometry).center);
+                        normal_to_surface.normalize();
+                    }
+                    else if(nior.geometry instanceof Circle){
+                        normal_to_surface.copy(((Circle)nior.geometry).normal);
                         normal_to_surface.normalize();
                     }
                     
@@ -127,7 +137,7 @@ public class RayTracerJava{
             //print("%d/%d" % (i + 1, height))
             System.out.println(i);
         }
-        File output = new File("../Renders/outputPlano.png");
+        File output = new File(String.format("../Renders/%s.png", nomArchivo));
         ImageIO.write(image, "png", output);
     }
 }

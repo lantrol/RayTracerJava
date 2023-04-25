@@ -24,14 +24,14 @@ public class Sphere extends Geometry{
     
     
     
-    public static Float intersect(Sphere s, Vector3 ray_origin, Vector3 ray_direction){
+    public Float intersect(Vector3 ray_origin, Vector3 ray_direction){
         Vector3 originMinusCenter = new Vector3();
         originMinusCenter.copy(ray_origin);
-        originMinusCenter.sub(s.center);
+        originMinusCenter.sub(this.center);
         //System.out.println(originMinusCenter.x + " " + originMinusCenter.y + " " + originMinusCenter.z);
         
         Float b = 2 * Vector3.dotProd(ray_direction, originMinusCenter);
-        Float c = Vector3.norm(originMinusCenter)*Vector3.norm(originMinusCenter) - s.radius*s.radius;
+        Float c = Vector3.norm(originMinusCenter)*Vector3.norm(originMinusCenter) - this.radius*this.radius;
         Float delta = b*b - 4*c;
         
         if (delta > 0){

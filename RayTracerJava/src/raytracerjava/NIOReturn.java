@@ -8,6 +8,8 @@ package raytracerjava;
  *
  * @author landa
  */
+
+// Nearest intersected object return values
 public class NIOReturn {
     public Geometry geometry;
     public Float min_distance;
