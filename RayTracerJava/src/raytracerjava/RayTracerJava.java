@@ -25,16 +25,16 @@ public class RayTracerJava{
     public static void main(String[] args) throws IOException {
         Camera camera = new Camera(1920, 1080);
         List<Geometry> objects = new ArrayList<Geometry>();
-        //objects.add(new Sphere(new Vector3(-0.2f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        //objects.add(new Sphere(new Vector3(0.2f, -0.3f, -0.5f), 0.2f, new Vector3(0.1f, 0f, 0.1f), new Vector3(0.3f, 0f, 0.4f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        //objects.add(new Sphere(new Vector3(2.5f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        //objects.add(new Sphere(new Vector3(-0.2f, -1001f, -1f), 1000f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        objects.add(new Sphere(new Vector3(-0.2f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        objects.add(new Sphere(new Vector3(0.2f, -0.3f, -0.5f), 0.2f, new Vector3(0.1f, 0f, 0.1f), new Vector3(0.3f, 0f, 0.4f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        objects.add(new Sphere(new Vector3(2.5f, 0f, -1.5f), 0.7f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        objects.add(new Sphere(new Vector3(-0.2f, -1001f, -1f), 1000f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         objects.add(new Plane(new Vector3(0f, -1f, 0f), new Vector3(0f, 1f, 0f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0.7f, 0.7f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         //objects.add(new Plane(new Vector3(0f, 0f, -20f), new Vector3(0f, 0f, 1f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0.7f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        objects.add(new Circle(new Vector3(0f, 0f, -1.5f), new Vector3(1f, 0f, 1f), 0.5f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
+        //objects.add(new Circle(new Vector3(0f, 0f, -1.5f), new Vector3(1f, 0f, 1f), 0.5f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         Light light = new Light(new Vector3(3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f));
         
-        Integer max_depth = 1;
+        Integer max_depth = 3;
         
         //Float[] p = Camera.linspace(camera.screen[1], camera.screen[3], camera.height);
         BufferedImage image = new BufferedImage(camera.width,camera.height,BufferedImage.TYPE_INT_RGB);
@@ -59,6 +59,7 @@ public class RayTracerJava{
                 //Color color = new Color(0f,0f, 0f);
                 
                 Float reflection = 1f;
+                Vector3 sumaColores = new Vector3(0f, 0f, 0f);
                 
                 for (int k = 0; k < max_depth; k++) {
                     NIOReturn nior = Geometry.nearest_intersected_object(objects, origin, direction);
@@ -116,6 +117,7 @@ public class RayTracerJava{
                     // Diffuse
                     illumination.add(Vector3.scale(Vector3.multiply(nior.geometry.diffuse, light.diffuse), Vector3.dotProd(intersection_to_light, normal_to_surface)));
                     
+                    //Specular
                     Vector3 intersection_to_camera = new Vector3();
                     intersection_to_camera.copy(camera.position);
                     intersection_to_camera.sub(intersection);
@@ -125,14 +127,17 @@ public class RayTracerJava{
                     
                     //Reflection
                     illumination.scale(reflection);
-                    Vector3 illuminationClip = Vector3.clip(illumination, 0f, 1f);
-                    Color color = new Color((float)illuminationClip.x,(float)illuminationClip.y, (float)illuminationClip.z);
+                    sumaColores.add(illumination);
+                    //Vector3 illuminationClip = Vector3.clip(illumination, 0f, 1f);
+                    //Color color = new Color((float)illuminationClip.x,(float)illuminationClip.y, (float)illuminationClip.z);
                     reflection = nior.geometry.reflection;
                     
                     origin.copy(shifted_point);
                     direction.copy(Vector3.reflected(direction, normal_to_surface));
-                    image.setRGB(j, i, color.getRGB());
                 }
+                Vector3 colorClip = Vector3.clip(sumaColores, 0f, 1f);
+                Color color = new Color((float)colorClip.x,(float)colorClip.y, (float)colorClip.z);
+                image.setRGB(j, i, color.getRGB());
             }
             //print("%d/%d" % (i + 1, height))
             System.out.println(i);
