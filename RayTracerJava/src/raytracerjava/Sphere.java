@@ -12,33 +12,26 @@ import java.util.ListIterator;
  *
  * @author landa
  */
-public class Sphere {
+public class Sphere extends Geometry{
     public Vector3 center;
     public Float radius;
-    public Vector3 ambient;
-    public Vector3 diffuse;
-    public Vector3 specular;
-    public Float shininess;
-    public Float reflection;
 
     public Sphere(Vector3 center, Float radius, Vector3 ambient, Vector3 diffuse, Vector3 specular, Float shininess, float reflection){
+        super(ambient, diffuse, specular, shininess, reflection);
         this.center = center;
         this.radius = radius;
-        this.ambient = ambient;
-        this.diffuse = diffuse;
-        this.specular = specular;
-        this.shininess = shininess;
-        this.reflection = reflection;
     }
     
-    public static Float sphere_intersect(Sphere s, Vector3 ray_origin, Vector3 ray_direction){
+    
+    
+    public Float intersect(Vector3 ray_origin, Vector3 ray_direction){
         Vector3 originMinusCenter = new Vector3();
         originMinusCenter.copy(ray_origin);
-        originMinusCenter.sub(s.center);
+        originMinusCenter.sub(this.center);
         //System.out.println(originMinusCenter.x + " " + originMinusCenter.y + " " + originMinusCenter.z);
         
         Float b = 2 * Vector3.dotProd(ray_direction, originMinusCenter);
-        Float c = Vector3.norm(originMinusCenter)*Vector3.norm(originMinusCenter) - s.radius*s.radius;
+        Float c = Vector3.norm(originMinusCenter)*Vector3.norm(originMinusCenter) - this.radius*this.radius;
         Float delta = b*b - 4*c;
         
         if (delta > 0){
@@ -51,6 +44,8 @@ public class Sphere {
         return null;
     }
     
+    
+    /*
     public static NIOReturn nearest_intersected_object(List<Sphere> objects, Vector3 ray_origin, Vector3 ray_direction){
         List<Float> distances = new ArrayList<Float>();
         for (Sphere obj: objects){
@@ -72,4 +67,5 @@ public class Sphere {
         NIOReturn ret = new NIOReturn(nearest_obj, min_distance);
         return ret;
     }
+    */
 }
