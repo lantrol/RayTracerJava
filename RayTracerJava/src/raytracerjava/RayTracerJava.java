@@ -32,9 +32,11 @@ public class RayTracerJava{
         objects.add(new Plane(new Vector3(0f, -1f, 0f), new Vector3(0f, 1f, 0f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0.7f, 0.7f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         //objects.add(new Plane(new Vector3(0f, 0f, -20f), new Vector3(0f, 0f, 1f),new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0.7f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         //objects.add(new Circle(new Vector3(0f, 0f, -1.5f), new Vector3(1f, 0f, 1f), 0.5f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
-        Light light = new Light(new Vector3(3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f));
+        List<Light> lights = new ArrayList<Light>();
+        lights.add(new Light(new Vector3(3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f)));
+        lights.add(new Light(new Vector3(-3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f)));
         
-        Integer max_depth = 3;
+        Integer max_depth = 6;
         
         //Float[] p = Camera.linspace(camera.screen[1], camera.screen[3], camera.height);
         BufferedImage image = new BufferedImage(camera.width,camera.height,BufferedImage.TYPE_INT_RGB);
@@ -93,48 +95,54 @@ public class RayTracerJava{
                     shifted_point.scale(0.00005f);
                     shifted_point.add(intersection);
                     
-                    Vector3 intersection_to_light = new Vector3();
-                    intersection_to_light.copy(light.position);
-                    intersection_to_light.sub(shifted_point);
-                    intersection_to_light.normalize();
-                    
-                    NIOReturn nior2 = Geometry.nearest_intersected_object(objects, shifted_point, intersection_to_light);
-                    Vector3 interToLight = new Vector3();
-                    interToLight.copy(light.position);
-                    interToLight.sub(intersection);
-                    Float intersection_to_light_distance = Vector3.norm(interToLight);
-                    
-                    Boolean is_shadowed = nior2.min_distance < intersection_to_light_distance;
-                    
-                    if (is_shadowed){
-                        break;
-                    }
-                    
-                    
                     Vector3 illumination = new Vector3();
-                    // Ambient
-                    illumination.add(Vector3.multiply(nior.geometry.ambient, light.ambient));
-                    // Diffuse
-                    illumination.add(Vector3.scale(Vector3.multiply(nior.geometry.diffuse, light.diffuse), Vector3.dotProd(intersection_to_light, normal_to_surface)));
                     
-                    //Specular
-                    Vector3 intersection_to_camera = new Vector3();
-                    intersection_to_camera.copy(camera.position);
-                    intersection_to_camera.sub(intersection);
-                    intersection_to_camera.normalize();
-                    Vector3 H = Vector3.normalize(Vector3.add(intersection_to_light, intersection_to_camera));
-                    illumination.add(Vector3.multiply(nior.geometry.specular, Vector3.scale(light.specular, (float)Math.pow(Vector3.dotProd(normal_to_surface, H), nior.geometry.shininess/4))));
-                    
-                    //Reflection
-                    illumination.scale(reflection);
-                    sumaColores.add(illumination);
+                    for (Light light: lights){
+                        
+                        Vector3 intersection_to_light = new Vector3();
+                        intersection_to_light.copy(light.position);
+                        intersection_to_light.sub(shifted_point);
+                        intersection_to_light.normalize();
+                        
+                        NIOReturn nior2 = Geometry.nearest_intersected_object(objects, shifted_point, intersection_to_light);
+                        Vector3 interToLight = new Vector3();
+                        interToLight.copy(light.position);
+                        interToLight.sub(intersection);
+                        Float intersection_to_light_distance = Vector3.norm(interToLight);
+
+                        Boolean is_shadowed = nior2.min_distance < intersection_to_light_distance;
+
+                        if (is_shadowed){
+                            continue;
+                        }
+
+
+                        //Vector3 illumination = new Vector3();
+                        // Ambient
+                        illumination.add(Vector3.multiply(nior.geometry.ambient, light.ambient));
+                        // Diffuse
+                        illumination.add(Vector3.scale(Vector3.multiply(nior.geometry.diffuse, light.diffuse), Vector3.dotProd(intersection_to_light, normal_to_surface)));
+
+                        //Specular
+                        Vector3 intersection_to_camera = new Vector3();
+                        intersection_to_camera.copy(camera.position);
+                        intersection_to_camera.sub(intersection);
+                        intersection_to_camera.normalize();
+                        Vector3 H = Vector3.normalize(Vector3.add(intersection_to_light, intersection_to_camera));
+                        illumination.add(Vector3.multiply(nior.geometry.specular, Vector3.scale(light.specular, (float)Math.pow(Vector3.dotProd(normal_to_surface, H), nior.geometry.shininess/4))));
+                        //Reflection
+                        illumination.scale(reflection);
+                        sumaColores.add(illumination);
+                        
+                    }                    
                     //Vector3 illuminationClip = Vector3.clip(illumination, 0f, 1f);
                     //Color color = new Color((float)illuminationClip.x,(float)illuminationClip.y, (float)illuminationClip.z);
                     reflection = nior.geometry.reflection;
-                    
+
                     origin.copy(shifted_point);
                     direction.copy(Vector3.reflected(direction, normal_to_surface));
                 }
+                sumaColores.scale(1f/lights.size());
                 Vector3 colorClip = Vector3.clip(sumaColores, 0f, 1f);
                 Color color = new Color((float)colorClip.x,(float)colorClip.y, (float)colorClip.z);
                 image.setRGB(j, i, color.getRGB());
