@@ -34,9 +34,9 @@ public class RayTracerJava{
         //objects.add(new Circle(new Vector3(0f, 0f, -1.5f), new Vector3(1f, 0f, 1f), 0.5f, new Vector3(0.1f, 0f, 0f), new Vector3(0.7f, 0f, 0f), new Vector3(1f, 1f, 1f), 100f, 0.5f));
         List<Light> lights = new ArrayList<Light>();
         lights.add(new Light(new Vector3(3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f)));
-        lights.add(new Light(new Vector3(-3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f)));
+        //lights.add(new Light(new Vector3(-3f,5f,5f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f), new Vector3(1f,1f,1f)));
         
-        Integer max_depth = 6;
+        Integer max_depth = 1;
         
         //Float[] p = Camera.linspace(camera.screen[1], camera.screen[3], camera.height);
         BufferedImage image = new BufferedImage(camera.width,camera.height,BufferedImage.TYPE_INT_RGB);
@@ -113,7 +113,66 @@ public class RayTracerJava{
                         Boolean is_shadowed = nior2.min_distance < intersection_to_light_distance;
 
                         if (is_shadowed){
-                            continue;
+                            int samples = 10;
+                            Vector3 reflected = Vector3.reflected(direction, normal_to_surface);
+                            for (int ray = 0; ray < samples; ray++){
+                                Vector3 deviated = Vector3.randomDeviation(reflected, 2f);
+                                deviated.normalize();
+                                NIOReturn nearest_obj = Geometry.nearest_intersected_object(objects, shifted_point, deviated);
+                                if (nearest_obj.geometry != null){
+                                    Vector3 GIPoint = Vector3.scale(deviated, nearest_obj.min_distance);
+                                    GIPoint.add(shifted_point);
+                                    Vector3 GINormal = new Vector3();
+                                    if (nearest_obj.geometry instanceof Plane){
+                                        GINormal = Vector3.normalize(((Plane)nearest_obj.geometry).normal);
+                                        GIPoint.add(Vector3.scale(GINormal, 0.0005f));
+                                    }
+                                    else if(nearest_obj.geometry instanceof Sphere){
+                                        GINormal = Vector3.sub(GIPoint, ((Sphere)nearest_obj.geometry).center);
+                                        GINormal.normalize();
+                                        GINormal.scale(0.0005f);
+                                        GIPoint.add(GINormal);
+                                    }
+                                    else if(nearest_obj.geometry instanceof Circle){
+                                        GINormal = Vector3.normalize(((Circle)nearest_obj.geometry).normal);
+                                        GIPoint.add(Vector3.scale(GINormal, 0.0005f));
+                                    }
+                                    Vector3 GIInterToLight = Vector3.sub(light.position, GIPoint);
+                                    Float GIDistanceToLight = Vector3.norm(GIInterToLight);
+                                    NIOReturn GINior = Geometry.nearest_intersected_object(objects, GIPoint, GIInterToLight);
+                                    
+                                    Boolean GIShadowed = GINior.min_distance < GIDistanceToLight;
+                                    
+                                    if (GIShadowed == false){
+                                        //Vector3 illumination = new Vector3();
+                                        // Ambient
+                                        illumination.add(Vector3.multiply(nearest_obj.geometry.ambient, light.ambient));
+                                        // Diffuse
+                                        illumination.add(Vector3.scale(Vector3.multiply(nearest_obj.geometry.diffuse, light.diffuse), Vector3.dotProd(GIInterToLight, GINormal)));
+
+                                        
+                                        //Specular
+                                        /*
+                                        Vector3 intersection_to_point = new Vector3();
+                                        intersection_to_point.copy(shifted_point);
+                                        intersection_to_point.sub(GIPoint);
+                                        intersection_to_point.normalize();
+                                        Vector3 H = Vector3.normalize(Vector3.add(GIInterToLight, intersection_to_point));
+                                        illumination.add(Vector3.multiply(nearest_obj.geometry.specular, Vector3.scale(light.specular, (float)Math.pow(Vector3.dotProd(GINormal, H), nearest_obj.geometry.shininess/4))));
+                                        */
+                                    }
+                                }
+                            }
+                            //Reflection
+                            illumination.scale(reflection);
+
+                            //Correcciones
+                            illumination.scale(1/10f);
+                            illumination.scale(nior.geometry.reflection);  
+                            illumination.add(Vector3.multiply(nior.geometry.ambient, light.ambient));
+                            
+                            sumaColores.add(illumination);
+                            break;
                         }
 
 
@@ -132,6 +191,7 @@ public class RayTracerJava{
                         illumination.add(Vector3.multiply(nior.geometry.specular, Vector3.scale(light.specular, (float)Math.pow(Vector3.dotProd(normal_to_surface, H), nior.geometry.shininess/4))));
                         //Reflection
                         illumination.scale(reflection);
+                        
                         sumaColores.add(illumination);
                         
                     }                    

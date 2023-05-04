@@ -4,6 +4,10 @@
  */
 package raytracerjava;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 /**
  *
  * @author landa
@@ -61,6 +65,15 @@ public class Vector3 {
         z=z*s;
     }
     
+    public void randomize(double min, double max){
+        Random r = new Random();
+        do{
+            this.x = (float)(min + (max - min) * r.nextDouble());
+            this.y = (float)(min + (max - min) * r.nextDouble());
+            this.z = (float)(min + (max - min) * r.nextDouble());
+        }while(Vector3.norm(this) == 0);
+    }
+    
     public static Float dotProd(Vector3 v1, Vector3 v2){
         Float prod;
         prod = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
@@ -112,5 +125,18 @@ public class Vector3 {
         Float y = Math.max(min, Math.min(max, v.y));
         Float z = Math.max(min, Math.min(max, v.z));
         return new Vector3(x, y, z);
+    }
+    
+    public static Vector3 randomDeviation(Vector3 v, Float angle){
+        Vector3 v2 = new Vector3();
+        v2.randomize(-1f, 1f);
+        Vector3 P = new Vector3(v.y*v2.z-v.z*v2.y, -(v.x*v2.z-v.z*v2.x), v.x*v2.y-v.y*v2.x);
+        P.scale(Vector3.norm(v2));
+       
+        Vector3 deviated = new Vector3();
+        deviated.copy(Vector3.scale(v, (float)Math.cos(angle)));
+        deviated.add(Vector3.scale(P, (float)Math.sin(angle)));
+        
+        return deviated;
     }
 }
